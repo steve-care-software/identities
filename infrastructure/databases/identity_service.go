@@ -21,6 +21,7 @@ type identityService struct {
 	repository  identities.Repository
 	context     uint
 	kind        uint
+	nameKind    uint
 }
 
 func createIdentityService(
@@ -29,6 +30,7 @@ func createIdentityService(
 	repository identities.Repository,
 	context uint,
 	kind uint,
+	nameKind uint,
 ) identities.Service {
 	out := identityService{
 		hashAdapter: hashAdapter,
@@ -36,6 +38,7 @@ func createIdentityService(
 		repository:  repository,
 		context:     context,
 		kind:        kind,
+		nameKind:    nameKind,
 	}
 
 	return &out
@@ -65,6 +68,17 @@ func (app *identityService) Insert(identity identities.Identity, password []byte
 		return err
 	}
 
+	err = app.database.Write(
+		app.context,
+		app.nameKind,
+		*pHash,
+		[]byte(identity.Name()),
+	)
+
+	if err != nil {
+		return err
+	}
+
 	return app.database.Write(
 		app.context,
 		app.kind,
@@ -85,43 +99,40 @@ func (app *identityService) Update(name string, updated identities.Identity, ori
 		return errors.New(str)
 	}
 
-	defer app.Delete(retIdentity, originalPassword)
+	err = app.Delete(retIdentity.Name(), originalPassword)
+	if err != nil {
+		return err
+	}
+
 	return app.Insert(updated, newPassword)
 }
 
 // Delete deletes an identity
-func (app *identityService) Delete(identity identities.Identity, password []byte) error {
-	pHash, err := app.hashAdapter.FromBytes([]byte(identity.Name()))
+func (app *identityService) Delete(name string, password []byte) error {
+	retIdentity, err := app.repository.Retrieve(name, password)
 	if err != nil {
 		return err
 	}
 
-	list, err := app.repository.ListDeleted()
+	pHash, err := app.hashAdapter.FromBytes([]byte(retIdentity.Name()))
 	if err != nil {
 		return err
 	}
 
-	list = append(list, identity.Name())
-	js, err := json.Marshal(list)
+	err = app.database.EraseByHash(app.context, app.kind, *pHash)
 	if err != nil {
 		return err
 	}
 
-	return app.database.Write(
-		app.context,
-		app.kind,
-		*pHash,
-		js,
-	)
+	// erase the name:
+	return app.database.EraseByHash(app.context, app.nameKind, *pHash)
 }
 
 func (app *identityService) encrypt(password []byte, message []byte) ([]byte, error) {
-	pHash, err := app.hashAdapter.FromBytes(password)
-	if err != nil {
-		return nil, err
-	}
-
-	block, blockErr := aes.NewCipher(*pHash)
+	hasher := curve.Hash()
+	hasher.Write(password)
+	hashedPass := hasher.Sum(nil)
+	block, blockErr := aes.NewCipher(hashedPass)
 	if blockErr != nil {
 		return nil, blockErr
 	}

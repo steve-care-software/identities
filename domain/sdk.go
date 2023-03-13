@@ -31,13 +31,14 @@ type Identity interface {
 type RepositoryBuilder interface {
 	Create() RepositoryBuilder
 	WithContext(context uint) RepositoryBuilder
+	WithKind(kind uint) RepositoryBuilder
+	WithNameKind(nameKind uint) RepositoryBuilder
 	Now() (Repository, error)
 }
 
 // Repository represents the identity repository
 type Repository interface {
 	List() ([]string, error)
-	ListDeleted() ([]string, error)
 	Retrieve(name string, password []byte) (Identity, error)
 }
 
@@ -46,6 +47,7 @@ type ServiceBuilder interface {
 	Create() ServiceBuilder
 	WithContext(context uint) ServiceBuilder
 	WithKind(kind uint) ServiceBuilder
+	WithNameKind(nameKind uint) ServiceBuilder
 	Now() (Service, error)
 }
 
@@ -53,5 +55,5 @@ type ServiceBuilder interface {
 type Service interface {
 	Insert(identity Identity, password []byte) error
 	Update(name string, updated Identity, originalPassword []byte, newPassword []byte) error
-	Delete(identity Identity, password []byte) error
+	Delete(name string, password []byte) error
 }

@@ -13,6 +13,8 @@ type identityRepositoryBuilder struct {
 	database    database_application.Application
 	builder     identities.Builder
 	pContext    *uint
+	pKind       *uint
+	pNameKind   *uint
 }
 
 func createIdentityRepositoryBuilder(
@@ -25,6 +27,8 @@ func createIdentityRepositoryBuilder(
 		database:    database,
 		builder:     builder,
 		pContext:    nil,
+		pKind:       nil,
+		pNameKind:   nil,
 	}
 
 	return &out
@@ -41,10 +45,30 @@ func (app *identityRepositoryBuilder) WithContext(context uint) identities.Repos
 	return app
 }
 
+// WithKind adds a kind to the builder
+func (app *identityRepositoryBuilder) WithKind(kind uint) identities.RepositoryBuilder {
+	app.pKind = &kind
+	return app
+}
+
+// WithNameKind adds a nameKind to the builder
+func (app *identityRepositoryBuilder) WithNameKind(nameKind uint) identities.RepositoryBuilder {
+	app.pNameKind = &nameKind
+	return app
+}
+
 // Now builds a new Repository instance
 func (app *identityRepositoryBuilder) Now() (identities.Repository, error) {
 	if app.pContext == nil {
 		return nil, errors.New("the context is mandatory in order to build a Repository instance")
+	}
+
+	if app.pKind == nil {
+		return nil, errors.New("the kind is mandatory in order to build a Repository instance")
+	}
+
+	if app.pNameKind == nil {
+		return nil, errors.New("the name kind is mandatory in order to build a Repository instance")
 	}
 
 	return createIdentityRepository(
@@ -52,5 +76,7 @@ func (app *identityRepositoryBuilder) Now() (identities.Repository, error) {
 		app.database,
 		app.builder,
 		*app.pContext,
+		*app.pKind,
+		*app.pNameKind,
 	), nil
 }

@@ -11,6 +11,8 @@ type identityApplication struct {
 	repositoryBuilder identities.RepositoryBuilder
 	serviceBuilder    identities.ServiceBuilder
 	dbName            string
+	kind              uint
+	nameKind          uint
 }
 
 func createIdentityApplication(
@@ -18,12 +20,16 @@ func createIdentityApplication(
 	repositoryBuilder identities.RepositoryBuilder,
 	serviceBuilder identities.ServiceBuilder,
 	dbName string,
+	kind uint,
+	nameKind uint,
 ) application_identity.Application {
 	out := identityApplication{
 		database:          database,
 		repositoryBuilder: repositoryBuilder,
 		serviceBuilder:    serviceBuilder,
 		dbName:            dbName,
+		kind:              kind,
+		nameKind:          nameKind,
 	}
 
 	return &out
@@ -81,6 +87,20 @@ func (app *identityApplication) Retrieve(name string, password []byte) (identiti
 	return repository.Retrieve(name, password)
 }
 
+func (app *identityApplication) Delete(name string, password []byte) error {
+	service, pContext, err := app.openService()
+	if err != nil {
+		return err
+	}
+
+	err = service.Delete(name, password)
+	if err != nil {
+		return app.cancelService(*pContext)
+	}
+
+	return app.saveService(*pContext)
+}
+
 func (app *identityApplication) cancelService(context uint) error {
 	defer app.database.Close(context)
 	return app.database.Cancel(context)
@@ -92,12 +112,24 @@ func (app *identityApplication) saveService(context uint) error {
 }
 
 func (app *identityApplication) openService() (identities.Service, *uint, error) {
+	exists, err := app.database.Exists(app.dbName)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if !exists {
+		err := app.database.New(app.dbName)
+		if err != nil {
+			return nil, nil, err
+		}
+	}
+
 	pContext, err := app.database.Open(app.dbName)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	service, err := app.serviceBuilder.Create().WithContext(*pContext).Now()
+	service, err := app.serviceBuilder.Create().WithContext(*pContext).WithKind(app.kind).WithNameKind(app.nameKind).Now()
 	if err != nil {
 		return nil, nil, err
 	}
@@ -111,7 +143,7 @@ func (app *identityApplication) openRepository() (identities.Repository, *uint, 
 		return nil, nil, err
 	}
 
-	repository, err := app.repositoryBuilder.Create().WithContext(*pContext).Now()
+	repository, err := app.repositoryBuilder.Create().WithContext(*pContext).WithKind(app.kind).WithNameKind(app.nameKind).Now()
 	if err != nil {
 		return nil, nil, err
 	}

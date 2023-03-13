@@ -17,6 +17,8 @@ type identityRepository struct {
 	database    database_application.Application
 	builder     identities.Builder
 	context     uint
+	kind        uint
+	nameKind    uint
 }
 
 func createIdentityRepository(
@@ -24,12 +26,16 @@ func createIdentityRepository(
 	database database_application.Application,
 	builder identities.Builder,
 	context uint,
+	kind uint,
+	nameKind uint,
 ) identities.Repository {
 	out := identityRepository{
 		hashAdapter: hashAdapter,
 		database:    database,
 		builder:     builder,
 		context:     context,
+		kind:        kind,
+		nameKind:    nameKind,
 	}
 
 	return &out
@@ -37,32 +43,28 @@ func createIdentityRepository(
 
 // List returns the list of identity names
 func (app *identityRepository) List() ([]string, error) {
-	return app.list(identityList)
-}
-
-// ListDeleted returns the list of deleted identity names
-func (app *identityRepository) ListDeleted() ([]string, error) {
-	return app.list(identityListDeleted)
-}
-
-func (app *identityRepository) list(keyname string) ([]string, error) {
-	pHash, err := app.hashAdapter.FromBytes([]byte(keyname))
+	contentKeys, err := app.database.ContentKeysByKind(app.context, app.nameKind)
 	if err != nil {
 		return nil, err
 	}
 
-	js, err := app.database.ReadByHash(app.context, *pHash)
+	hashes := []hash.Hash{}
+	contentKeysList := contentKeys.List()
+	for _, oneContentKey := range contentKeysList {
+		hashes = append(hashes, oneContentKey.Hash())
+	}
+
+	values, err := app.database.ReadAllByHashes(app.context, app.nameKind, hashes)
 	if err != nil {
 		return nil, err
 	}
 
-	list := new([]string)
-	err = json.Unmarshal(js, list)
-	if err != nil {
-		return nil, err
+	output := []string{}
+	for _, oneValue := range values {
+		output = append(output, string(oneValue))
 	}
 
-	return *list, nil
+	return output, nil
 }
 
 // Retrieve retrieves an identity by name and password
@@ -72,7 +74,7 @@ func (app *identityRepository) Retrieve(name string, password []byte) (identitie
 		return nil, err
 	}
 
-	cipher, err := app.database.ReadByHash(app.context, *pHash)
+	cipher, err := app.database.ReadByHash(app.context, app.kind, *pHash)
 	if err != nil {
 		return nil, err
 	}
@@ -97,12 +99,10 @@ func (app *identityRepository) Retrieve(name string, password []byte) (identitie
 }
 
 func (app *identityRepository) decrypt(password []byte, cipherBytes []byte) ([]byte, error) {
-	pHash, err := app.hashAdapter.FromBytes(password)
-	if err != nil {
-		return nil, err
-	}
-
-	block, blockErr := aes.NewCipher(*pHash)
+	hasher := curve.Hash()
+	hasher.Write(password)
+	hashedPass := hasher.Sum(nil)
+	block, blockErr := aes.NewCipher(hashedPass)
 	if blockErr != nil {
 		return nil, blockErr
 	}

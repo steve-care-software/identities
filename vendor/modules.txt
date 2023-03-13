@@ -1,14 +1,30 @@
-# github.com/ethereum/go-ethereum v1.11.4
-## explicit; go 1.19
-github.com/ethereum/go-ethereum/crypto/secp256k1
-github.com/ethereum/go-ethereum/crypto/secp256k1/libsecp256k1/include
-github.com/ethereum/go-ethereum/crypto/secp256k1/libsecp256k1/src
-github.com/ethereum/go-ethereum/crypto/secp256k1/libsecp256k1/src/modules/recovery
-# github.com/steve-care-software/databases v0.0.0-20230313190123-530a8a38c112
+# github.com/juju/fslock v0.0.0-20160525022230-4d5c94c67b4b
+## explicit
+github.com/juju/fslock
+# github.com/steve-care-software/databases v0.0.0-20230313225431-45808d3bbe71
 ## explicit; go 1.19
 github.com/steve-care-software/databases/applications
+github.com/steve-care-software/databases/domain/contents
 github.com/steve-care-software/databases/domain/references
+github.com/steve-care-software/databases/infrastructure/files
 # github.com/steve-care-software/libs v0.0.0-20230312132714-485fdb38680d
 ## explicit; go 1.19
 github.com/steve-care-software/libs/cryptography/hash
 github.com/steve-care-software/libs/cryptography/trees
+# go.dedis.ch/fixbuf v1.0.3
+## explicit
+go.dedis.ch/fixbuf
+# go.dedis.ch/kyber/v3 v3.1.0
+## explicit; go 1.13
+go.dedis.ch/kyber/v3
+go.dedis.ch/kyber/v3/group/edwards25519
+go.dedis.ch/kyber/v3/group/internal/marshalling
+go.dedis.ch/kyber/v3/group/mod
+go.dedis.ch/kyber/v3/util/random
+go.dedis.ch/kyber/v3/xof/blake2xb
+# golang.org/x/crypto v0.0.0-20190123085648-057139ce5d2b
+## explicit
+golang.org/x/crypto/blake2b
+# golang.org/x/sys v0.0.0-20190124100055-b90733256f2e
+## explicit
+golang.org/x/sys/cpu
