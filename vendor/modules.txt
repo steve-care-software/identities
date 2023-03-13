@@ -1,3 +1,9 @@
+# github.com/ethereum/go-ethereum v1.11.4
+## explicit; go 1.19
+github.com/ethereum/go-ethereum/crypto/secp256k1
+github.com/ethereum/go-ethereum/crypto/secp256k1/libsecp256k1/include
+github.com/ethereum/go-ethereum/crypto/secp256k1/libsecp256k1/src
+github.com/ethereum/go-ethereum/crypto/secp256k1/libsecp256k1/src/modules/recovery
 # github.com/steve-care-software/databases v0.0.0-20230313190123-530a8a38c112
 ## explicit; go 1.19
 github.com/steve-care-software/databases/applications

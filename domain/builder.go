@@ -74,8 +74,8 @@ func (app *builder) Now() (Identity, error) {
 		return nil, errors.New("the publicKey is mandatory in order to build an Identity instance")
 	}
 
-	if app.pCreatedOn.Unix() <= 0 {
-		return nil, errors.New("the creationTime's timestamp must be greater than zero (0) in order to build an Identity instance")
+	if app.pCreatedOn == nil {
+		return nil, errors.New("the creationTime is mandatory in order to build an Identity instance")
 	}
 
 	return createIdentity(app.name, app.private, app.public, *app.pCreatedOn), nil

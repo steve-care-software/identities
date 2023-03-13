@@ -2,6 +2,9 @@ package applications
 
 import identities "github.com/steve-care-software/identities/domain"
 
+// GenerateKeyPairFn is a func to generate key pair
+type GenerateKeyPairFn func() ([]byte, []byte)
+
 // Application represents the chain application
 type Application interface {
 	List() ([]string, error)
