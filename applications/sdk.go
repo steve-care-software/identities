@@ -19,4 +19,5 @@ type Application interface {
 	Retrieve(name string, password []byte) (identities.Identity, error)
 	Delete(name string, password []byte) error
 	Sign(hash hash.Hash, identity identities.Identity) ([]byte, error)
+	VerifySignature(signature []byte, hash hash.Hash) (bool, error)
 }
